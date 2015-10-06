@@ -7,41 +7,35 @@ class Checkout
   end
 
   def scan(item)
-    price = item.price
     @items << item
   end
 
   def total
-    total = 0
-    count_fr = 0
-    count_sr = 0
-    items.each do |item|
-      price = item.price
-      if item.code == "FR1"
-        count_fr = 1 + count_fr
-        if count_fr == 2
-          count_fr = 0 
-          price = 0
-        end
-      end
-      if item.code == "SR1"
-        count_sr = 1 + count_sr
-        if count_sr > 2
-          price = 4.50
-          if count_sr == 3
-            total = total - 1.00
-          end
-        end
-      end
-      total = price + total
-    end
-    total
+    sub_total_frs, touched_items_frs = pay_one_get_one_free_rule(items)
+    sub_total_srs, touched_items_srs = three_or_more_discount_rule(items)
+
+    touched_items = (touched_items_srs + touched_items_frs).uniq
+    untouched_items = items - touched_items
+    untouched_items_sub_total = untouched_items.map(&:price).sum
+
+    (sub_total_frs + sub_total_srs + untouched_items_sub_total).round(2)
+    
   end
 
   def pay_one_get_one_free_rule(items)
+    frs = items.select{|item| item.code == "FR1"}
+    sub_total_frs = ((frs.length + 1)/2).floor * frs.first.price rescue 0
+    [sub_total_frs, frs]
   end
 
   def three_or_more_discount_rule(items)
+    srs = items.select{|item| item.code == "SR1"}
+    if srs.length >= 3  
+      sub_total_srs = 4.50 * srs.length
+    else
+      sub_total_srs = srs.map(&:price).reduce(:+) || 0
+    end
+    [sub_total_srs, srs]
   end
 
   def lol_rule(items)

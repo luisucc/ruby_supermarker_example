@@ -6,7 +6,7 @@ RSpec.describe "" do
 
     it "returns 0 when there are no items" do
       total = checkout.total
-      expect(total).to be 0
+      expect(total).to be 0.0
     end
 
     it "returns the same price as when adding one item" do
@@ -65,7 +65,7 @@ RSpec.describe "" do
       expect(total).to be 16.61
     end  
 
-    it "returns for bulk purchases offers adding 3 or more strawberries" do
+    it "returns for the 4 fruit tea, paying only 2 of them (pay 1, get 2)" do
       sr = Item.new code: "SR1", name: "Strawberry", price: 5.00
       fr = Item.new code: "FR1", name: "Fruit tea", price: 3.11
       cf = Item.new code: "CF1", name: "Coffee", price: 11.23
