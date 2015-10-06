@@ -30,8 +30,24 @@ RSpec.describe "" do
   context "with rules" do
 
     let(:pricing_rules) do
-      [:rule1, :rule2]
+
+      [
+        lambda{|items|
+          frs = items.select{|item| item.code == "FR1"}
+          sub_total_frs = ((frs.length + 1)/2).floor * frs.first.price rescue 0
+          [sub_total_frs, frs]},
+        
+        lambda{|items|
+          srs = items.select{|item| item.code == "SR1"}
+          if srs.length >= 3  
+            sub_total_srs = 4.50 * srs.length
+          else
+            sub_total_srs = srs.map(&:price).reduce(:+) || 0
+          end
+          [sub_total_srs, srs]}
+          ]
     end
+    
     let(:checkout){ Checkout.new(pricing_rules) }
 
     it "returns buy-one-get-one-free offers whit fruit tea" do
