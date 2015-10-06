@@ -1,9 +1,10 @@
 class Checkout
 
-  attr_accessor :items
+  attr_accessor :items, :pricing_rules
 
-  def initialize(pricing_rules = nil)
+  def initialize(pricing_rules = [])
     @items = []
+    @pricing_rules = pricing_rules
   end
 
   def scan(item)
@@ -11,24 +12,28 @@ class Checkout
   end
 
   def total
-    sub_total_frs, touched_items_frs = pay_one_get_one_free_rule(items)
-    sub_total_srs, touched_items_srs = three_or_more_discount_rule(items)
 
-    touched_items = (touched_items_srs + touched_items_frs).uniq
-    untouched_items = items - touched_items
-    untouched_items_sub_total = untouched_items.map(&:price).sum
+    all_subtotals = 0
+    all_touched_items = []
 
-    (sub_total_frs + sub_total_srs + untouched_items_sub_total).round(2)
-    
+    pricing_rules.map do |rule|
+      subtotal, touched_items = method(rule).call(items)
+      all_subtotals += subtotal
+      all_touched_items += touched_items
+    end
+
+    untouched_items = items - all_touched_items
+
+    (all_subtotals + untouched_items.map(&:price).sum).round(2)
   end
 
-  def pay_one_get_one_free_rule(items)
+  def rule1(items)
     frs = items.select{|item| item.code == "FR1"}
     sub_total_frs = ((frs.length + 1)/2).floor * frs.first.price rescue 0
     [sub_total_frs, frs]
   end
 
-  def three_or_more_discount_rule(items)
+  def rule2(items)
     srs = items.select{|item| item.code == "SR1"}
     if srs.length >= 3  
       sub_total_srs = 4.50 * srs.length

@@ -30,7 +30,7 @@ RSpec.describe "" do
   context "with rules" do
 
     let(:pricing_rules) do
-
+      [:rule1, :rule2]
     end
     let(:checkout){ Checkout.new(pricing_rules) }
 
